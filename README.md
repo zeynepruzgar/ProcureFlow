@@ -5,15 +5,11 @@ düşük stok, geciken sipariş ve olağan dışı fiyat artışlarını tespit 
 **AI agent** ürün, stok, açık sipariş ve tedarikçi verilerini araçlar üzerinden
 inceleyip **gerekçeli satın alma önerisi** hazırlar ve yönetici onayına gönderir.
 
-> Agent hiçbir zaman satın alma işlemini kendi başına tamamlamaz. Onaylanan
-> öneri yalnızca **taslak satın alma talebine** dönüşür ve tüm işlemler
-> **audit log**'da tutulur.
-
 ## Teknolojiler
 
 - **Frontend:** Next.js, TypeScript, Tailwind CSS, shadcn/ui
 - **Backend:** Python, FastAPI, Pydantic
-- **Agent:** LangGraph (sağlayıcı-bağımsız LLM; Ollama ile başla, ucuz hosted'a geç)
+- **Agent:** LangGraph (geliştirme Ollama, production GPT-5 nano)
 - **Database/Auth:** Supabase PostgreSQL + Supabase Auth
 - **Authorization:** RBAC + Row Level Security
 - **Test:** Pytest, Vitest, Playwright
