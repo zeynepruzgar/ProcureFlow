@@ -26,6 +26,34 @@ apps/web     # Next.js dashboard
 apps/api     # FastAPI + LangGraph agent + detection
 supabase     # şema, RLS, seed
 docs         # mimari ve tasarım dokümanları
+docker       # yerel orkestrasyon notları
+```
+
+## Hızlı Başlangıç
+
+Ortam değişkenleri için `.env.example` dosyalarını kopyalayın (kök, `apps/api`, `apps/web`).
+
+API (Python 3.12):
+
+```bash
+cd apps/api
+python3.12 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload   # http://localhost:8000  (docs: /docs)
+```
+
+Web (Node 22):
+
+```bash
+cd apps/web
+npm install
+npm run dev                     # http://localhost:3000
+```
+
+Docker ile hepsi birden (web + api + ollama):
+
+```bash
+docker compose up --build
 ```
 
 ## Dokümantasyon
