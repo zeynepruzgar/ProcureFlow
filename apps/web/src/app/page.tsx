@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { ApiStatus } from "@/components/api-status";
 
 const roles = [
@@ -12,6 +14,20 @@ export default function Home() {
   return (
     <div className="flex flex-1 flex-col items-center bg-zinc-50 font-sans dark:bg-black">
       <main className="flex w-full max-w-3xl flex-1 flex-col gap-10 px-6 py-16 sm:px-8">
+        <nav className="flex justify-end gap-3 text-sm font-medium">
+          <Link
+            href="/login"
+            className="rounded-lg border border-black/[.12] px-4 py-2 transition-colors hover:bg-black/[.04] dark:border-white/[.2] dark:hover:bg-white/[.06]"
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/dashboard"
+            className="rounded-lg bg-foreground px-4 py-2 text-background transition-opacity hover:opacity-90"
+          >
+            Dashboard
+          </Link>
+        </nav>
         <header className="flex flex-col gap-3">
           <span className="text-sm font-medium uppercase tracking-widest text-zinc-500">
             ProcureFlow
