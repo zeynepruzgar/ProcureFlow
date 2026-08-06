@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from app.core.auth import CurrentUser, get_current_user, require_roles
 
-router = APIRouter(tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.get("/me", response_model=CurrentUser)

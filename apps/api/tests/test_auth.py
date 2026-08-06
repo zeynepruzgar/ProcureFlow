@@ -10,7 +10,7 @@ client = TestClient(app)
 
 def test_me_requires_token():
     # Token gonderilmezse 401 donmeli (Supabase'e hic gidilmez).
-    response = client.get("/me")
+    response = client.get("/auth/me")
     assert response.status_code == 401
 
 
@@ -19,7 +19,7 @@ def test_me_returns_current_user_when_authenticated():
     fake = CurrentUser(id="u1", email="user@example.com", full_name="Test User", role="manager")
     app.dependency_overrides[get_current_user] = lambda: fake
     try:
-        response = client.get("/me")
+        response = client.get("/auth/me")
         assert response.status_code == 200
         body = response.json()
         assert body["id"] == "u1"

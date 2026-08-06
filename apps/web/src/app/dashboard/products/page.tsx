@@ -31,14 +31,11 @@ export default function ProductsPage() {
   const fetchProducts = useCallback(() => apiFetch<Product[]>("/products"), []);
 
   useEffect(() => {
-    async function load() {
+    // Liste ve rol ayri ayri yuklenir: rol cagrisi basarisiz olsa bile
+    // liste yine gorunur (sadece ekleme formu gizli kalir).
+    async function loadList() {
       try {
-        const [items, me] = await Promise.all([
-          fetchProducts(),
-          apiFetch<Me>("/auth/me"),
-        ]);
-        setProducts(items);
-        setRole(me.role);
+        setProducts(await fetchProducts());
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load products");
@@ -46,7 +43,16 @@ export default function ProductsPage() {
         setLoading(false);
       }
     }
-    void load();
+    async function loadRole() {
+      try {
+        const me = await apiFetch<Me>("/auth/me");
+        setRole(me.role);
+      } catch {
+        // rol alinamazsa yazma yetkisi varsayilan olarak kapali
+      }
+    }
+    void loadList();
+    void loadRole();
   }, [fetchProducts]);
 
   const canWrite = WRITER_ROLES.includes(role);
