@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.core.config import get_settings
+from app.routers import auth as auth_router
 
 settings = get_settings()
 
@@ -36,3 +37,7 @@ def health() -> HealthResponse:
 @app.get("/", tags=["system"])
 def root() -> dict[str, str]:
     return {"message": "ProcureFlow API. See /docs for the OpenAPI UI."}
+
+
+# Rota gruplarini (router) uygulamaya bagla.
+app.include_router(auth_router.router)
