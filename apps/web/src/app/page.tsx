@@ -61,13 +61,6 @@ export default function Home() {
           </ul>
         </section>
 
-        <footer className="mt-auto text-sm text-zinc-500">
-          Phase 0 &mdash; project scaffold. See the roadmap in{" "}
-          <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-            docs/ROADMAP.md
-          </code>
-          .
-        </footer>
       </main>
     </div>
   );
