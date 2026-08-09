@@ -9,8 +9,16 @@ from app.core.supabase_client import get_admin_client
 
 
 class ProductService:
-    def __init__(self, client: Client) -> None:
-        self.client = client
+    def __init__(self, client: Client | None = None) -> None:
+        # client=None: gercek istemci ilk DB cagrisinda olusturulur.
+        # Boylece auth-only testler (401) Supabase env olmadan da gecer.
+        self._client = client
+
+    @property
+    def client(self) -> Client:
+        if self._client is None:
+            self._client = get_admin_client()
+        return self._client
 
     def list(self) -> list[dict[str, Any]]:
         result = self.client.table("products").select("*").order("name").execute()
@@ -41,5 +49,6 @@ def get_product_service() -> ProductService:
     """Router'in kullanacagi ProductService'i uretir (dependency).
 
     Testlerde bu bagimlilik sahte bir servisle degistirilebilir.
+    Supabase istemcisi burada ACILMAZ; ilk DB kullaniminde acilir.
     """
-    return ProductService(get_admin_client())
+    return ProductService()

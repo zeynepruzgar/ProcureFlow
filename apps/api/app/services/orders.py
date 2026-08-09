@@ -6,8 +6,14 @@ from app.core.supabase_client import get_admin_client
 
 
 class OrderService:
-    def __init__(self, client: Client) -> None:
-        self.client = client
+    def __init__(self, client: Client | None = None) -> None:
+        self._client = client
+
+    @property
+    def client(self) -> Client:
+        if self._client is None:
+            self._client = get_admin_client()
+        return self._client
 
     def list(self) -> list[dict[str, Any]]:
         result = (
@@ -35,4 +41,4 @@ class OrderService:
 
 
 def get_order_service() -> OrderService:
-    return OrderService(get_admin_client())
+    return OrderService()

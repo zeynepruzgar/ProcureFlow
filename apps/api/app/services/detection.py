@@ -22,8 +22,15 @@ from app.detection.rules import DetectedIssue, run_all_rules
 
 
 class DetectionService:
-    def __init__(self, client: Client) -> None:
-        self.client = client
+    def __init__(self, client: Client | None = None) -> None:
+        # Lazy client: auth-only testler Supabase env olmadan da 401 donebilir.
+        self._client = client
+
+    @property
+    def client(self) -> Client:
+        if self._client is None:
+            self._client = get_admin_client()
+        return self._client
 
     # ----- veri cekme -----
     def _fetch_products(self) -> list[dict[str, Any]]:
@@ -119,4 +126,4 @@ class DetectionService:
 
 
 def get_detection_service() -> DetectionService:
-    return DetectionService(get_admin_client())
+    return DetectionService()
