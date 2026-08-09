@@ -51,3 +51,22 @@ export interface Order {
   supplier?: { name?: string } | null;
   lines?: OrderLine[] | null;
 }
+
+export type SignalType = "low_stock" | "delayed_order" | "price_spike";
+export type Severity = "low" | "medium" | "high";
+
+export interface Signal {
+  id: string;
+  type: SignalType;
+  entity_id: string;
+  severity: Severity;
+  status: "open" | "handled";
+  detected_at?: string | null;
+}
+
+export interface ScanResult {
+  created: number;
+  updated: number;
+  closed: number;
+  open_signals: Signal[];
+}
