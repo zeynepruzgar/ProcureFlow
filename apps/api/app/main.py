@@ -7,6 +7,7 @@ from app.routers import auth as auth_router
 from app.routers import inventory as inventory_router
 from app.routers import orders as orders_router
 from app.routers import products as products_router
+from app.routers import signals as signals_router
 from app.routers import suppliers as suppliers_router
 
 settings = get_settings()
@@ -49,3 +50,4 @@ app.include_router(products_router.router)
 app.include_router(suppliers_router.router)
 app.include_router(inventory_router.router)
 app.include_router(orders_router.router)
+app.include_router(signals_router.router)

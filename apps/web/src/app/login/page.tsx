@@ -7,7 +7,6 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
-  const supabase = createClient();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,11 +14,14 @@ export default function LoginPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Supabase istemcisini render'da DEGIL, sadece kullanici aksiyonunda olustur.
+  // Aksi halde CI/build sirasinda env yokken /login prerender patlar.
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setMessage(null);
     setLoading(true);
+    const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
@@ -35,6 +37,7 @@ export default function LoginPage() {
     setError(null);
     setMessage(null);
     setLoading(true);
+    const supabase = createClient();
     const { data, error } = await supabase.auth.signUp({ email, password });
     setLoading(false);
     if (error) {
