@@ -70,3 +70,17 @@ export interface ScanResult {
   closed: number;
   open_signals: Signal[];
 }
+
+export type RecommendationStatus = "pending" | "approved" | "rejected";
+
+export interface Recommendation {
+  id: string;
+  signal_id: string;
+  agent_run_id: string | null;
+  rationale: string | null;
+  suggested_supplier_id: string | null;
+  suggested_qty: number | null;
+  status: RecommendationStatus;
+  reviewer_id: string | null;
+  created_at?: string | null;
+}

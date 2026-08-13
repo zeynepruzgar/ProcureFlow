@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { apiFetch } from "@/lib/api";
-import type { ScanResult, Signal, SignalType } from "@/lib/types";
+import type { Recommendation, ScanResult, Signal, SignalType } from "@/lib/types";
 
 const WRITER_ROLES = ["procurement_specialist", "manager", "admin"];
 
@@ -40,6 +40,11 @@ export default function SignalsPage() {
   const [error, setError] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
   const [scanSummary, setScanSummary] = useState<string | null>(null);
+  const [recommendations, setRecommendations] = useState<
+    Record<string, Recommendation>
+  >({});
+  const [generating, setGenerating] = useState<Record<string, boolean>>({});
+  const [recError, setRecError] = useState<Record<string, string>>({});
 
   const fetchSignals = useCallback(
     () => apiFetch<Signal[]>("/signals?status=open"),
@@ -90,6 +95,30 @@ export default function SignalsPage() {
     }
   }
 
+  async function handleGenerateRecommendation(signalId: string) {
+    setGenerating((prev) => ({ ...prev, [signalId]: true }));
+    setRecError((prev) => {
+      const next = { ...prev };
+      delete next[signalId];
+      return next;
+    });
+    try {
+      const rec = await apiFetch<Recommendation>(
+        `/signals/${signalId}/recommend`,
+        { method: "POST" },
+      );
+      setRecommendations((prev) => ({ ...prev, [signalId]: rec }));
+    } catch (err) {
+      setRecError((prev) => ({
+        ...prev,
+        [signalId]:
+          err instanceof Error ? err.message : "Failed to generate recommendation",
+      }));
+    } finally {
+      setGenerating((prev) => ({ ...prev, [signalId]: false }));
+    }
+  }
+
   return (
     <>
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -136,30 +165,70 @@ export default function SignalsPage() {
                 <th className="px-4 py-2 font-medium">Severity</th>
                 <th className="px-4 py-2 font-medium">Entity ID</th>
                 <th className="px-4 py-2 font-medium">Detected</th>
+                {canScan && (
+                  <th className="px-4 py-2 font-medium">Recommendation</th>
+                )}
               </tr>
             </thead>
             <tbody>
-              {signals.map((s) => (
-                <tr
-                  key={s.id}
-                  className="border-t border-black/[.06] dark:border-white/[.08]"
-                >
-                  <td className="px-4 py-2 font-medium">{typeLabel(s.type)}</td>
-                  <td className="px-4 py-2">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${severityClasses(s.severity)}`}
-                    >
-                      {s.severity}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 font-mono text-xs text-zinc-500">
-                    {s.entity_id}
-                  </td>
-                  <td className="px-4 py-2 text-zinc-500">
-                    {s.detected_at ? s.detected_at.slice(0, 19).replace("T", " ") : "—"}
-                  </td>
-                </tr>
-              ))}
+              {signals.map((s) => {
+                const rec = recommendations[s.id];
+                const isGenerating = generating[s.id] ?? false;
+                const rowError = recError[s.id];
+                return (
+                  <tr
+                    key={s.id}
+                    className="border-t border-black/[.06] dark:border-white/[.08]"
+                  >
+                    <td className="px-4 py-2 font-medium">{typeLabel(s.type)}</td>
+                    <td className="px-4 py-2">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${severityClasses(s.severity)}`}
+                      >
+                        {s.severity}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 font-mono text-xs text-zinc-500">
+                      {s.entity_id}
+                    </td>
+                    <td className="px-4 py-2 text-zinc-500">
+                      {s.detected_at
+                        ? s.detected_at.slice(0, 19).replace("T", " ")
+                        : "—"}
+                    </td>
+                    {canScan && (
+                      <td className="px-4 py-2 align-top">
+                        {rec ? (
+                          <div className="max-w-sm space-y-1">
+                            <span className="inline-flex rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                              {rec.status}
+                            </span>
+                            <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                              {rec.rationale}
+                            </p>
+                            <p className="text-xs text-zinc-500">
+                              Qty: {rec.suggested_qty ?? "—"} · Supplier:{" "}
+                              {rec.suggested_supplier_id ?? "—"}
+                            </p>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleGenerateRecommendation(s.id)}
+                            disabled={isGenerating}
+                            className="rounded-lg border border-black/[.08] px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-80 disabled:opacity-50 dark:border-white/[.145]"
+                          >
+                            {isGenerating ? "Generating…" : "Generate recommendation"}
+                          </button>
+                        )}
+                        {rowError && (
+                          <p className="mt-1 text-xs text-red-600">{rowError}</p>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
