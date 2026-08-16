@@ -89,11 +89,31 @@ def get_chat_model():
 LLM_PROVIDER=ollama
 LLM_MODEL=llama3.1
 OLLAMA_URL=http://ollama:11434
+LLM_TEMPERATURE=0.1
+LLM_MAX_TOKENS=220
 # hosted gecerken:
 # LLM_PROVIDER=openai
 # LLM_MODEL=gpt-4o-mini
 # OPENAI_API_KEY=...
 ```
+
+### Prompt dili ve kalite ayarları
+
+Tüm prompt'lar ve üretilen gerekçeler **İngilizce**dir. Bu bir stil tercihi
+değil, ölçülmüş bir kalite kararıdır: `llama3.2` (3B) gibi küçük yerel
+modellere Türkçe prompt verildiğinde diller arası geçiş yapıp bozuk metin
+üretiyorlar (ör. *"ürününün tái Daleme gerektiği ve ... chosen bahwa"*).
+Aynı senaryoda İngilizce prompt ile çıktı hem tutarlı hem de ~6 kat hızlı
+(12.4 sn → 2.0 sn).
+
+Kaliteyi belirleyen diğer iki etken:
+
+- **Ham DB satırı gönderilmez.** `build_facts()` (apps/api/app/agent/graph.py)
+  uuid/`created_at` gürültüsünü ayıklayıp modele insan okunur, sade bir bilgi
+  fişi (JSON) verir. Boş alanlar tamamen atılır ki model doldurmaya çalışmasın.
+- **Düşük `temperature`.** Ollama varsayılanı `0.8`; gerekçe metni yaratıcı
+  değil verilen gerçeklere sadık olmalı, bu yüzden `0.1` kullanıyoruz.
+  `LLM_MAX_TOKENS` de çıktıyı 2-3 cümlede tutar.
 
 ---
 
