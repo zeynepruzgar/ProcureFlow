@@ -24,6 +24,27 @@ pytest
 ruff check .
 ```
 
+## Loglama
+
+Seviye `.env` icindeki `LOG_LEVEL` ile ayarlanir (varsayilan `INFO`).
+Kurulum: `app/core/logging.py`.
+
+- `INFO` — agent akisinin her adimi: hangi baglam toplandi, LLM'e hangi model
+  ile gidildi, **LLM'in ham cevabi**, hangi oneri/taslak talep yazildi.
+- `DEBUG` — ek olarak LLM'e giden **tam prompt** ve toplanan tam baglam.
+- LLM cagrisi basarisiz olursa `WARNING` + traceback basilir ve akis kural
+  tabanli sablona duser. "Neden gerekce sablondan geldi?" sorusunun cevabi
+  bu satirdadir (ornegin `ConnectError: [Errno 61] Connection refused`
+  → Ollama ayakta degil).
+
+Tek bir agent calismasini takip etmek icin log satirlarindaki `[run <id>]`
+onekini kullanin: onay akisi iki ayri HTTP istegine (`/recommend` ve
+`/approve`) yayildigi icin ayni `run_id` her ikisinde de gorunur.
+
+```bash
+LOG_LEVEL=DEBUG uvicorn app.main:app --reload
+```
+
 ## Structure
 
 ```text

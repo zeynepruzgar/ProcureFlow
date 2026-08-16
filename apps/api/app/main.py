@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.core.config import get_settings
+from app.core.logging import setup_logging
 from app.routers import auth as auth_router
 from app.routers import inventory as inventory_router
 from app.routers import orders as orders_router
@@ -12,6 +13,10 @@ from app.routers import signals as signals_router
 from app.routers import suppliers as suppliers_router
 
 settings = get_settings()
+
+# Loglamayi router'lar calismadan once kur ki ilk istekten itibaren
+# app.* loglari (ozellikle agent/LLM) terminalde gorunsun.
+setup_logging()
 
 app = FastAPI(
     title="ProcureFlow API",

@@ -6,6 +6,10 @@ supabase==2.31.0
 langgraph==1.2.11
 langchain-core==1.5.4
 langchain-ollama==1.1.0
+# Faz 6: onay kesmesi (interrupt) state'ini kaliciliga tasiyan checkpointer.
+# psycopg[binary,pool]: Postgres'e senkron baglanti + connection pool.
+langgraph-checkpoint-postgres==3.1.2
+psycopg[binary,pool]==3.3.4
 
 # --- dev / test ---
 pytest==8.3.4
