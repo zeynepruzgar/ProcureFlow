@@ -3,9 +3,18 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { apiFetch } from "@/lib/api";
-import type { Recommendation, ScanResult, Signal, SignalType } from "@/lib/types";
+import type {
+  PurchaseRequest,
+  Recommendation,
+  RecommendationDecision,
+  ScanResult,
+  Signal,
+  SignalType,
+} from "@/lib/types";
 
 const WRITER_ROLES = ["procurement_specialist", "manager", "admin"];
+// Onaylama/reddetme yalnizca manager/admin: docs/DATA_MODEL.md rol tablosu.
+const REVIEW_ROLES = ["manager", "admin"];
 
 interface Me {
   role: string;
@@ -43,8 +52,15 @@ export default function SignalsPage() {
   const [recommendations, setRecommendations] = useState<
     Record<string, Recommendation>
   >({});
+  const [purchaseRequests, setPurchaseRequests] = useState<
+    Record<string, PurchaseRequest>
+  >({});
   const [generating, setGenerating] = useState<Record<string, boolean>>({});
   const [recError, setRecError] = useState<Record<string, string>>({});
+  // Hangi sinyal icin hangi karar (approve/reject) islemde: butonlari ayri ayri disable etmek icin.
+  const [deciding, setDeciding] = useState<Record<string, "approve" | "reject">>(
+    {},
+  );
 
   const fetchSignals = useCallback(
     () => apiFetch<Signal[]>("/signals?status=open"),
@@ -75,6 +91,7 @@ export default function SignalsPage() {
   }, [fetchSignals]);
 
   const canScan = WRITER_ROLES.includes(role);
+  const canReview = REVIEW_ROLES.includes(role);
 
   async function handleScan() {
     setScanning(true);
@@ -116,6 +133,52 @@ export default function SignalsPage() {
       }));
     } finally {
       setGenerating((prev) => ({ ...prev, [signalId]: false }));
+    }
+  }
+
+  async function handleDecision(
+    signalId: string,
+    recommendationId: string,
+    decision: "approve" | "reject",
+  ) {
+    setDeciding((prev) => ({ ...prev, [signalId]: decision }));
+    setRecError((prev) => {
+      const next = { ...prev };
+      delete next[signalId];
+      return next;
+    });
+    try {
+      const result = await apiFetch<RecommendationDecision>(
+        `/recommendations/${recommendationId}/${decision}`,
+        { method: "POST" },
+      );
+      setRecommendations((prev) => ({
+        ...prev,
+        [signalId]: result.recommendation,
+      }));
+      if (result.purchase_request) {
+        setPurchaseRequests((prev) => ({
+          ...prev,
+          [signalId]: result.purchase_request as PurchaseRequest,
+        }));
+      }
+      // Backend karar sonrasi sinyali 'handled' yapar; satiri hemen listeden
+      // dusurmek yerine sonucu gorebilsinler diye lokal olarak isaretliyoruz.
+      setSignals((prev) =>
+        prev.map((s) => (s.id === signalId ? { ...s, status: "handled" } : s)),
+      );
+    } catch (err) {
+      setRecError((prev) => ({
+        ...prev,
+        [signalId]:
+          err instanceof Error ? err.message : `Failed to ${decision} recommendation`,
+      }));
+    } finally {
+      setDeciding((prev) => {
+        const next = { ...prev };
+        delete next[signalId];
+        return next;
+      });
     }
   }
 
@@ -173,12 +236,16 @@ export default function SignalsPage() {
             <tbody>
               {signals.map((s) => {
                 const rec = recommendations[s.id];
+                const pr = purchaseRequests[s.id];
                 const isGenerating = generating[s.id] ?? false;
+                const decidingAction = deciding[s.id];
                 const rowError = recError[s.id];
                 return (
                   <tr
                     key={s.id}
-                    className="border-t border-black/[.06] dark:border-white/[.08]"
+                    className={`border-t border-black/[.06] dark:border-white/[.08] ${
+                      s.status === "handled" ? "opacity-60" : ""
+                    }`}
                   >
                     <td className="px-4 py-2 font-medium">{typeLabel(s.type)}</td>
                     <td className="px-4 py-2">
@@ -199,8 +266,16 @@ export default function SignalsPage() {
                     {canScan && (
                       <td className="px-4 py-2 align-top">
                         {rec ? (
-                          <div className="max-w-sm space-y-1">
-                            <span className="inline-flex rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                          <div className="max-w-sm space-y-1.5">
+                            <span
+                              className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                                rec.status === "approved"
+                                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                                  : rec.status === "rejected"
+                                    ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
+                                    : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+                              }`}
+                            >
                               {rec.status}
                             </span>
                             <p className="text-xs text-zinc-600 dark:text-zinc-400">
@@ -210,6 +285,50 @@ export default function SignalsPage() {
                               Qty: {rec.suggested_qty ?? "—"} · Supplier:{" "}
                               {rec.suggested_supplier_id ?? "—"}
                             </p>
+
+                            {rec.status === "pending" && canReview && (
+                              <div className="flex gap-2 pt-1">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleDecision(s.id, rec.id, "approve")
+                                  }
+                                  disabled={Boolean(decidingAction)}
+                                  className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                                >
+                                  {decidingAction === "approve"
+                                    ? "Approving…"
+                                    : "Approve"}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleDecision(s.id, rec.id, "reject")
+                                  }
+                                  disabled={Boolean(decidingAction)}
+                                  className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 transition-opacity hover:opacity-80 disabled:opacity-50 dark:border-red-900/60 dark:text-red-300"
+                                >
+                                  {decidingAction === "reject"
+                                    ? "Rejecting…"
+                                    : "Reject"}
+                                </button>
+                              </div>
+                            )}
+                            {rec.status === "pending" && !canReview && (
+                              <p className="text-xs text-zinc-400">
+                                Awaiting manager approval.
+                              </p>
+                            )}
+
+                            {rec.status === "approved" && (
+                              <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                                {pr
+                                  ? `Draft purchase request created (qty ${
+                                      pr.lines[0]?.qty ?? rec.suggested_qty ?? "—"
+                                    }).`
+                                  : "Approved — draft purchase request created."}
+                              </p>
+                            )}
                           </div>
                         ) : (
                           <button

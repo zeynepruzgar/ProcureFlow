@@ -84,3 +84,23 @@ export interface Recommendation {
   reviewer_id: string | null;
   created_at?: string | null;
 }
+
+export interface PurchaseRequestLine {
+  product_id?: string | null;
+  qty?: number | null;
+}
+
+export interface PurchaseRequest {
+  id: string;
+  recommendation_id: string;
+  supplier_id: string | null;
+  lines: PurchaseRequestLine[];
+  status: "draft";
+  created_by: string | null;
+  created_at?: string | null;
+}
+
+export interface RecommendationDecision {
+  recommendation: Recommendation;
+  purchase_request: PurchaseRequest | null;
+}
