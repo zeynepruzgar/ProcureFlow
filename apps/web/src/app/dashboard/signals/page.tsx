@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { apiFetch } from "@/lib/api";
@@ -326,7 +327,13 @@ export default function SignalsPage() {
                                   ? `Draft purchase request created (qty ${
                                       pr.lines[0]?.qty ?? rec.suggested_qty ?? "—"
                                     }).`
-                                  : "Approved — draft purchase request created."}
+                                  : "Approved — draft purchase request created."}{" "}
+                                <Link
+                                  href="/dashboard/purchase-requests"
+                                  className="underline underline-offset-2"
+                                >
+                                  View it
+                                </Link>
                               </p>
                             )}
                           </div>

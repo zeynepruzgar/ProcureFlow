@@ -88,6 +88,8 @@ export interface Recommendation {
 export interface PurchaseRequestLine {
   product_id?: string | null;
   qty?: number | null;
+  // Backend'de servis katmani doldurur (lines jsonb oldugu icin join edilemez).
+  product?: { name?: string; sku?: string; unit?: string } | null;
 }
 
 export interface PurchaseRequest {
@@ -98,6 +100,13 @@ export interface PurchaseRequest {
   status: "draft";
   created_by: string | null;
   created_at?: string | null;
+  supplier?: { name?: string; lead_time_days?: number } | null;
+  recommendation?: {
+    rationale?: string;
+    status?: RecommendationStatus;
+    signal_id?: string;
+    suggested_qty?: number;
+  } | null;
 }
 
 export interface RecommendationDecision {
