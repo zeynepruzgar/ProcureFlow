@@ -1,6 +1,8 @@
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import BaseModel
+
+from app.schemas.purchase_request import PurchaseRequest
 
 RecommendationStatus = Literal["pending", "approved", "rejected"]
 
@@ -14,16 +16,6 @@ class Recommendation(BaseModel):
     suggested_qty: float | None = None
     status: RecommendationStatus
     reviewer_id: str | None = None
-    created_at: str | None = None
-
-
-class PurchaseRequest(BaseModel):
-    id: str
-    recommendation_id: str
-    supplier_id: str | None = None
-    lines: list[dict[str, Any]] = []
-    status: Literal["draft"] = "draft"
-    created_by: str | None = None
     created_at: str | None = None
 
 
